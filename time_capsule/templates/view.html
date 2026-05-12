@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2>📦 Капсула #{{ capsule.id }}: {{ capsule.title }}</h2>
+    <span class="badge badge-{{ capsule.category }}">{{ capsule.category }}</span>
+</div>
+
+<div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+    <p><strong>Автор:</strong> {{ capsule.author }}</p>
+    <p><strong>Создана:</strong> {{ capsule.created_at.strftime('%d.%m.%Y в %H:%M') }}</p>
+    <p><strong>Дата открытия:</strong> {{ capsule.open_at.strftime('%d.%m.%Y в %H:%M') }}</p>
+    <p><strong>Статус:</strong> 
+        {% if capsule.is_opened %}
+            <span class="badge badge-opened">✅ Открыта</span>
+        {% elif can_open %}
+            <span class="badge badge-pending">🔓 Готова к открытию!</span>
+        {% else %}
+            <span class="badge badge-pending">⏳ Закрыта (осталось дней: {{ (capsule.open_at - now()).days if capsule.open_at > now() else 0 }})</span>
+        {% endif %}
+    </p>
+</div>
+
+<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; margin-bottom: 20px;">
+    <h3 style="margin-bottom: 15px;">📝 Содержимое:</h3>
+    
+    {% if capsule.is_opened or can_open %}
+        <div style="white-space: pre-wrap; line-height: 1.6; font-size: 1.1em;">
+            {{ capsule.content }}
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 40px;">
+            <p style="font-size: 3em; margin-bottom: 20px;">🔒</p>
+            <p style="font-size: 1.2em;">Содержимое скрыто до {{ capsule.open_at.strftime('%d.%m.%Y в %H:%M') }}</p>
+            <p style="margin-top: 10px; opacity: 0.8;">Приходите позже, чтобы открыть капсулу!</p>
+        </div>
+    {% endif %}
+</div>
+
+<div style="display: flex; gap: 10px;">
+    {% if can_open and not capsule.is_opened %}
+        <a href="{{ url_for('open_capsule', capsule_id=capsule.id) }}" class="btn">
+            🎉 Открыть капсулу
+        </a>
+    {% endif %}
+    
+    <a href="{{ url_for('index') }}" class="btn" style="background: #6c757d;">
+        ← На главную
+    </a>
+    
+    <a href="{{ url_for('all_capsules') }}" class="btn" style="background: #17a2b8;">
+        📚 Все капсулы
+    </a>
+</div>
+
+<!-- Функция для получения текущего времени -->
+{% set now = datetime.utcnow %}
+{% endblock %}

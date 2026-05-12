@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>✉️ Создать новую капсулу времени</h2>
+<p style="margin-bottom: 20px; color: #666;">
+    Сохраните свои мысли, воспоминания или цели для будущего. 
+    Вы сможете открыть эту капсулу только после указанной даты!
+</p>
+
+<form method="POST">
+    {{ form.hidden_tag() }}
+    
+    <div class="form-group">
+        {{ form.title.label }}
+        {{ form.title() }}
+        {% if form.title.errors %}
+            {% for error in form.title.errors %}
+                <span style="color: red; font-size: 0.9em;">{{ error }}</span>
+            {% endfor %}
+        {% endif %}
+    </div>
+    
+    <div class="form-group">
+        {{ form.content.label }}
+        {{ form.content() }}
+        {% if form.content.errors %}
+            {% for error in form.content.errors %}
+                <span style="color: red; font-size: 0.9em;">{{ error }}</span>
+            {% endfor %}
+        {% endif %}
+    </div>
+    
+    <div class="form-group">
+        {{ form.author.label }}
+        {{ form.author() }}
+        {% if form.author.errors %}
+            {% for error in form.author.errors %}
+                <span style="color: red; font-size: 0.9em;">{{ error }}</span>
+            {% endfor %}
+        {% endif %}
+    </div>
+    
+    <div class="form-group">
+        {{ form.open_date.label }}
+        {{ form.open_date() }}
+        <small style="color: #666;">Формат: ГГГГ-ММ-ДД ЧЧ:ММ (например, 2025-12-31 23:59)</small>
+        {% if form.open_date.errors %}
+            {% for error in form.open_date.errors %}
+                <span style="color: red; font-size: 0.9em;">{{ error }}</span>
+            {% endfor %}
+        {% endif %}
+    </div>
+    
+    <div class="form-group">
+        {{ form.category.label }}
+        {{ form.category() }}
+    </div>
+    
+    <div class="form-group">
+        {{ form.email.label }}
+        {{ form.email() }}
+        <small style="color: #666;">Опционально: для будущих уведомлений</small>
+    </div>
+    
+    {{ form.submit() }}
+</form>
+
+<a href="{{ url_for('index') }}" class="btn" style="background: #6c757d; margin-top: 20px;">← Назад на главную</a>
+{% endblock %}
