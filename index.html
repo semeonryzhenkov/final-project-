@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Алиса: Купи слона</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 400px;
+            height: 600px;
+            background-color: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .chat-header {
+            background: linear-gradient(90deg, #FFCC00 0%, #FF9900 100%);
+            padding: 15px;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .chat-header img {
+            width: 30px;
+            height: 30px;
+            background: white;
+            border-radius: 50%;
+            padding: 2px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background-color: #f9f9f9;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 15px;
+            line-height: 1.4;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .message.alice {
+            align-self: flex-start;
+            background-color: #e0e0e0;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background-color: #FFCC00;
+            color: #000;
+            border-bottom-right-radius: 4px;
+        }
+
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 5px;
+        }
+
+        .suggestion-chip {
+            background-color: white;
+            border: 1px solid #FFCC00;
+            color: #d68b00;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .suggestion-chip:hover {
+            background-color: #FFCC00;
+            color: white;
+        }
+
+        .chat-input-area {
+            padding: 15px;
+            background-color: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+            font-size: 15px;
+            transition: border-color 0.2s;
+        }
+
+        .chat-input:focus {
+            border-color: #FFCC00;
+        }
+
+        .send-btn {
+            background-color: #FFCC00;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.1s;
+        }
+
+        .send-btn:active {
+            transform: scale(0.95);
+        }
+
+        .send-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+            margin-left: 2px; /* Visual correction */
+        }
+
+        /* Animation for new messages */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message {
+            animation: fadeIn 0.3s ease-out;
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-header">
+        <!-- Yandex Alice Logo Placeholder -->
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="12" fill="#FFCC00"/>
+            <path d="M12 6C9 6 7 8 7 11C7 14 9 16 12 16C15 16 17 14 17 11C17 8 15 6 12 6ZM12 14C10 14 9 13 9 11C9 9 10 8 12 8C14 8 15 9 15 11C15 13 14 14 12 14Z" fill="#333"/>
+        </svg>
+        Алиса
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+        <!-- Messages will appear here -->
+    </div>
+
+    <div class="chat-input-area">
+        <input type="text" class="chat-input" id="userInput" placeholder="Напишите сообщение..." autocomplete="off">
+        <button class="send-btn" id="sendBtn">
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+    </div>
+</div>
+
+<script>
+    // Логика навыка "Купи слона"
+    const sessionStorage = {};
+    let currentUserId = 'user_' + Math.random().toString(36).substr(2, 9);
+
+    const chatMessages = document.getElementById('chatMessages');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    // Инициализация сессии
+    sessionStorage[currentUserId] = {
+        suggests: ["Не хочу.", "Не буду.", "Отстань!"]
+    };
+
+    function addMessage(text, sender, buttons = []) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${sender}`;
+        
+        const textSpan = document.createElement('span');
+        textSpan.textContent = text;
+        msgDiv.appendChild(textSpan);
+
+        if (buttons.length > 0) {
+            const suggestionsDiv = document.createElement('div');
+            suggestionsDiv.className = 'suggestions';
+            
+            buttons.forEach(btn => {
+                const chip = document.createElement('div');
+                chip.className = 'suggestion-chip';
+                chip.textContent = btn.title;
+                chip.onclick = () => {
+                    userInput.value = btn.title;
+                    handleUserRequest(btn.title);
+                };
+                suggestionsDiv.appendChild(chip);
+            });
+            msgDiv.appendChild(suggestionsDiv);
+        }
+
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function handleUserRequest(text) {
+        if (!text.trim()) return;
+
+        // Добавляем сообщение пользователя
+        addMessage(text, 'user');
+        userInput.value = '';
+
+        // Имитация задержки ответа Алисы
+        setTimeout(() => {
+            processAliceResponse(text);
+        }, 600);
+    }
+
+    function processAliceResponse(userText) {
+        const session = sessionStorage[currentUserId];
+        const lowerText = userText.toLowerCase();
+
+        let responseText = '';
+        let buttons = [];
+        let endSession = false;
+
+        // Логика из урока
+        if (['ладно', 'куплю', 'покупаю', 'хорошо'].includes(lowerText)) {
+            responseText = 'Слона можно найти на Яндекс.Маркете!';
+            endSession = true;
+        } else {
+            responseText = `Все говорят "${userText}", а ты купи слона!`;
+            buttons = getSuggests(currentUserId);
+        }
+
+        addMessage(responseText, 'alice', buttons);
+
+        if (endSession) {
+            setTimeout(() => {
+                addMessage("Диалог завершен. Обновите страницу, чтобы начать заново.", 'alice');
+            }, 1000);
+        }
+    }
+
+    function getSuggests(userId) {
+        const session = sessionStorage[userId];
+        if (!session || !session.suggests || session.suggests.length === 0) {
+            return [{
+                title: "Ладно",
+                url: "https://market.yandex.ru/search?text=слон"
+            }];
+        }
+
+        // Берем первые две подсказки
+        const currentSuggests = session.suggests.slice(0, 2);
+        const buttons = currentSuggests.map(text => ({ title: text }));
+
+        // Удаляем первую подсказку для следующего раза
+        session.suggests = session.suggests.slice(1);
+        
+        // Если осталась одна или меньше, добавляем кнопку "Ладно"
+        if (session.suggests.length < 2) {
+             buttons.push({
+                title: "Ладно",
+                url: "https://market.yandex.ru/search?text=слон"
+            });
+        }
+
+        return buttons;
+    }
+
+    // Обработчики событий
+    sendBtn.addEventListener('click', () => {
+        handleUserRequest(userInput.value);
+    });
+
+    userInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleUserRequest(userInput.value);
+        }
+    });
+
+    // Приветственное сообщение при загрузке
+    window.onload = () => {
+        setTimeout(() => {
+            const initialButtons = getSuggests(currentUserId);
+            addMessage('Привет! Купи слона!', 'alice', initialButtons);
+        }, 500);
+    };
+</script>
+
+</body>
+</html>
