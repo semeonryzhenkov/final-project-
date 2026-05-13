@@ -8,6 +8,7 @@ from wtforms.validators import DataRequired, Length
 from datetime import datetime, timedelta
 import json
 import requests  # Для работы с внешними API
+import uuid
 
 # Инициализация приложения
 app = Flask(__name__)
@@ -305,6 +306,58 @@ class QuoteAPI(Resource):
             }, 200
 
 
+class AliceAI(Resource):
+    """Интеграция с Алисой AI через Яндекс Диалоги API"""
+    
+    def post(self):
+        """Отправить запрос к Алисе и получить ответ"""
+        data = request.get_json()
+        if not data or 'message' not in data:
+            return {'error': 'Требуется поле message'}, 400
+        
+        user_message = data['message']
+        session_id = data.get('session_id', str(uuid.uuid4()))
+        
+        # Формируем запрос к Яндекс Диалогам API (Алиса)
+        # Примечание: Для продакшена нужен OAuth токен Яндекс
+        alice_url = "https://dialogs.yandex.net/api/v1/skills/your-skill-id/message"
+        
+        # Так как у нас нет реального токена, эмулируем ответ Алисы
+        # В реальном проекте здесь был бы запрос к API Яндекса
+        alice_response = self._generate_alice_response(user_message)
+        
+        return {
+            'session_id': session_id,
+            'user_message': user_message,
+            'alice_response': alice_response,
+            'source': 'Алиса AI (эмуляция)'
+        }, 200
+    
+    def _generate_alice_response(self, message):
+        """Генерация ответа Алисы на основе контекста капсул времени"""
+        message_lower = message.lower()
+        
+        if 'капсул' in message_lower or 'врем' in message_lower:
+            return "Капсула времени — это прекрасная возможность сохранить свои мысли и воспоминания для будущего. Вы можете создать капсулу прямо сейчас!"
+        elif 'привет' in message_lower or 'здравствуй' in message_lower:
+            return "Здравствуйте! Я Алиса, ваш помощник в мире капсул времени. Чем могу помочь?"
+        elif 'созда' in message_lower or 'напиш' in message_lower:
+            return "Чтобы создать капсулу, перейдите на страницу создания и заполните форму. Не забудьте указать дату открытия!"
+        elif 'откры' in message_lower:
+            return "Проверьте статус ваших капсул на странице просмотра. Если дата наступила, вы сможете открыть послание."
+        elif 'совет' in message_lower or 'иде' in message_lower:
+            ideas = [
+                "Напишите письмо себе через год с описанием текущих целей.",
+                "Сохраните воспоминания о важном событии сегодняшнего дня.",
+                "Запишите предсказания о том, каким будет мир через 5 лет.",
+                "Оставьте послание будущим поколениям вашей семьи."
+            ]
+            import random
+            return f"Идея для капсулы: {random.choice(ideas)}"
+        else:
+            return "Я могу помочь вам с созданием и управлением капсулами времени. Спросите меня о том, как создать капсулу, открыть её или получить идею для послания."
+
+
 class StatsAPI(Resource):
     """REST API для статистики"""
     
@@ -327,6 +380,7 @@ api.add_resource(CapsuleAPI, '/api/capsules', '/api/capsules/<int:capsule_id>')
 api.add_resource(StatsAPI, '/api/stats')
 api.add_resource(WeatherEnhancedCapsule, '/api/weather-idea')
 api.add_resource(QuoteAPI, '/api/quote')
+api.add_resource(AliceAI, '/api/alice')
 
 
 # ==================== КОМАНДНАЯ СТРОКА (HTTP-API задание) ====================
