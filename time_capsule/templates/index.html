@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>📊 Статистика</h2>
+<h2>Статистика</h2>
 <div class="stats">
     <div class="stat-card">
         <h3>{{ stats.total }}</h3>
@@ -17,55 +17,148 @@
     </div>
 </div>
 
-<!-- Внешние API для вдохновения -->
-<div class="api-section" style="margin: 30px 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px;">
-    <h3>🌟 Вдохновение от внешних API</h3>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
-        <button onclick="getWeatherIdea()" class="btn" style="background: rgba(255,255,255,0.2);">🌤️ Погода + Идея</button>
-        <button onclick="getQuote()" class="btn" style="background: rgba(255,255,255,0.2);">💭 Цитата дня</button>
+<!-- Окно Яндекс Алисы -->
+<div class="alice-window" style="margin: 30px 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px;">
+    <h3>Яндекс Алиса</h3>
+    <div id="alice-chat" style="padding: 15px; background: rgba(255,255,255,0.9); border-radius: 8px;">
+        <div id="chat-messages" style="height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; background: #f9f9f9;"></div>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="alice-input" placeholder="Введите ваш вопрос..." style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            <button onclick="sendToAlice()" class="btn" style="background: #667eea;">Отправить</button>
+        </div>
     </div>
-    <div id="api-result" style="margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.9); border-radius: 8px; display: none;"></div>
 </div>
 
 <script>
-async function getWeatherIdea() {
-    const resultDiv = document.getElementById('api-result');
-    resultDiv.style.display = 'block';
-    resultDiv.innerHTML = 'Загрузка...';
+// Глобальное состояние сессии для Алисы
+let aliceSession = {
+    session_id: null,
+    message_id: 0,
+    user_id: 'web-user-' + Math.random().toString(36).substr(2, 9)
+};
+
+function addChatMessage(sender, message, buttons = []) {
+    const chatMessages = document.getElementById('chat-messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.style.marginBottom = '10px';
+    messageDiv.style.padding = '8px';
+    messageDiv.style.borderRadius = '4px';
+    messageDiv.style.background = sender === 'Алиса' ? '#e3f2fd' : '#f5f5f5';
+    
+    let html = `<strong>${sender}:</strong> ${message}`;
+    
+    // Добавляем кнопки если есть
+    if (buttons && buttons.length > 0) {
+        html += '<div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px;">';
+        buttons.forEach(btn => {
+            html += `<button onclick="sendToAlice('${btn.title.replace(/'/g, "\\'")}')" class="btn" style="padding: 5px 10px; font-size: 0.9em; background: #667eea;">${btn.title}</button>`;
+        });
+        html += '</div>';
+    }
+    
+    messageDiv.innerHTML = html;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+async function sendToAlice(text) {
+    const input = document.getElementById('alice-input');
+    const message = text || input.value.trim();
+    
+    if (!message) return;
+    
+    addChatMessage('Вы', message);
+    if (!text) input.value = '';
+    
+    const chatMessages = document.getElementById('chat-messages');
+    const loadingDiv = document.createElement('div');
+    loadingDiv.id = 'loading-message';
+    loadingDiv.style.color = '#666';
+    loadingDiv.style.fontStyle = 'italic';
+    loadingDiv.textContent = 'Алиса печатает...';
+    chatMessages.appendChild(loadingDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // Увеличиваем ID сообщения
+    aliceSession.message_id++;
+    
+    // Формируем запрос в формате Яндекс Диалогов
+    const requestBody = {
+        request: {
+            command: message,
+            original_utterance: message,
+            type: 'SimpleUtterance'
+        },
+        session: {
+            new: aliceSession.session_id === null,
+            message_id: aliceSession.message_id,
+            session_id: aliceSession.session_id || 'session-' + Date.now(),
+            skill_id: 'local-skill-001',
+            user_id: aliceSession.user_id
+        },
+        version: '1.0'
+    };
     
     try {
-        const response = await fetch('/api/weather-idea');
+        const response = await fetch('/api/alice', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
-        resultDiv.innerHTML = `
-            <strong>🌤️ Погода:</strong> ${data.weather.temperature}, ветер ${data.weather.windspeed}<br>
-            <strong>💡 Идея:</strong> ${data.capsule_idea}<br>
-            <small>Источник: ${data.source}</small>
-        `;
+        
+        // Сохраняем session_id для последующих запросов
+        if (data.session && data.session.session_id) {
+            aliceSession.session_id = data.session.session_id;
+        }
+        
+        // Удаляем сообщение о загрузке
+        const loadingMsg = document.getElementById('loading-message');
+        if (loadingMsg) loadingMsg.remove();
+        
+        // Отображаем ответ
+        const text = data.response?.text || 'Нет ответа';
+        const buttons = data.response?.buttons || [];
+        addChatMessage('Алиса', text, buttons);
+        
+        // Если сессия завершена
+        if (data.response?.end_session) {
+            aliceSession.session_id = null;
+            aliceSession.message_id = 0;
+        }
     } catch (e) {
-        resultDiv.innerHTML = 'Ошибка загрузки погоды';
+        console.error('Alice API error:', e);
+        const loadingMsg = document.getElementById('loading-message');
+        if (loadingMsg) loadingMsg.remove();
+        addChatMessage('Система', `Ошибка: ${e.message}`);
     }
 }
 
-async function getQuote() {
-    const resultDiv = document.getElementById('api-result');
-    resultDiv.style.display = 'block';
-    resultDiv.innerHTML = 'Загрузка...';
-    
-    try {
-        const response = await fetch('/api/quote');
-        const data = await response.json();
-        resultDiv.innerHTML = `
-            <em>"${data.quote}"</em><br>
-            <strong>— ${data.author}</strong><br>
-            <small>Источник: ${data.source}</small>
-        `;
-    } catch (e) {
-        resultDiv.innerHTML = 'Ошибка загрузки цитаты';
+// Обработка Enter в поле ввода
+document.addEventListener('DOMContentLoaded', function() {
+    const aliceInput = document.getElementById('alice-input');
+    if (aliceInput) {
+        aliceInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendToAlice();
+            }
+        });
     }
-}
+    // Приветственное сообщение - инициируем первый запрос
+    setTimeout(() => {
+        sendToAlice('привет');
+    }, 500);
+});
 </script>
 
-<h2>➕ Быстрое создание капсулы</h2>
+<h2>Быстрое создание капсулы</h2>
 <form method="POST" action="{{ url_for('create_capsule') }}">
     {{ form.hidden_tag() }}
     
@@ -102,7 +195,7 @@ async function getQuote() {
     {{ form.submit() }}
 </form>
 
-<h2 style="margin-top: 40px;">📬 Последние капсулы</h2>
+<h2 style="margin-top: 40px;">Последние капсулы</h2>
 <div class="capsule-list">
     {% for capsule in capsules %}
     <div class="capsule-item">

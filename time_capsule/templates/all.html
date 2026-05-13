@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>📚 Все капсулы времени</h2>
+<h2>Все капсулы времени</h2>
 
 <div style="margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 10px;">
     <form method="GET" style="display: flex; gap: 15px; flex-wrap: wrap; align-items: end;">
@@ -22,7 +22,7 @@
                    style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px;">
         </div>
         
-        <button type="submit" class="btn">🔍 Найти</button>
+        <button type="submit" class="btn">Найти</button>
         <a href="{{ url_for('all_capsules') }}" class="btn" style="background: #6c757d;">Сбросить</a>
     </form>
 </div>
@@ -42,7 +42,7 @@
                         <strong>Автор:</strong> {{ capsule.author }} | 
                         <strong>Открытие:</strong> {{ capsule.open_at.strftime('%d.%m.%Y %H:%M') }}
                         {% if not capsule.is_opened %}
-                            | <strong>Осталось дней:</strong> {{ (capsule.open_at - now()).days if capsule.open_at > now() else 0 }}
+                            | <strong>Осталось дней:</strong> {{ ((capsule.open_at - now).days) if (capsule.open_at > now) else 0 }}
                         {% endif %}
                     </p>
                 </div>
@@ -52,13 +52,10 @@
     </div>
     {% else %}
     <div style="text-align: center; padding: 40px; color: #666;">
-        <p style="font-size: 3em; margin-bottom: 20px;">📭</p>
+        <p style="font-size: 3em; margin-bottom: 20px;"></p>
         <p>Капсул не найдено</p>
         <a href="{{ url_for('create_capsule') }}" class="btn" style="margin-top: 20px;">Создать первую капсулу</a>
     </div>
     {% endfor %}
 </div>
-
-<!-- Функция для получения текущего времени -->
-{% set now = datetime.utcnow %}
 {% endblock %}
