@@ -17,70 +17,19 @@
     </div>
 </div>
 
-<!-- Внешние API для вдохновения -->
-<div class="api-section" style="margin: 30px 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px;">
-    <h3>Вдохновение от внешних API</h3>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
-        <button onclick="getWeatherIdea()" class="btn" style="background: rgba(255,255,255,0.2);">Погода + Идея</button>
-        <button onclick="getQuote()" class="btn" style="background: rgba(255,255,255,0.2);">Цитата дня</button>
-        <button onclick="askAlice()" class="btn" style="background: rgba(255,255,255,0.2);">Спросить Алису</button>
-    </div>
-    <div id="api-result" style="margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.9); border-radius: 8px; display: none;"></div>
-    
-    <!-- Чат с Алисой -->
-    <div id="alice-chat" style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.9); border-radius: 8px; display: none;">
-        <h4>Чат с Алисой AI</h4>
-        <div id="chat-messages" style="height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; background: #f9f9f9;"></div>
+<!-- Окно Яндекс Алисы -->
+<div class="alice-window" style="margin: 30px 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px;">
+    <h3>Яндекс Алиса</h3>
+    <div id="alice-chat" style="padding: 15px; background: rgba(255,255,255,0.9); border-radius: 8px;">
+        <div id="chat-messages" style="height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; background: #f9f9f9;"></div>
         <div style="display: flex; gap: 10px;">
-            <input type="text" id="alice-input" placeholder="Введите ваш вопрос..." style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            <input type="text" id="alice-input" placeholder="Введите ваш вопрос..." style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
             <button onclick="sendToAlice()" class="btn" style="background: #667eea;">Отправить</button>
         </div>
     </div>
 </div>
 
 <script>
-async function getWeatherIdea() {
-    const resultDiv = document.getElementById('api-result');
-    resultDiv.style.display = 'block';
-    resultDiv.innerHTML = 'Загрузка...';
-    
-    try {
-        const response = await fetch('/api/weather-idea');
-        const data = await response.json();
-        resultDiv.innerHTML = `
-            <strong>Погода:</strong> ${data.weather.temperature}, ветер ${data.weather.windspeed}<br>
-            <strong>Идея:</strong> ${data.capsule_idea}<br>
-            <small>Источник: ${data.source}</small>
-        `;
-    } catch (e) {
-        resultDiv.innerHTML = 'Ошибка загрузки погоды';
-    }
-}
-
-async function getQuote() {
-    const resultDiv = document.getElementById('api-result');
-    resultDiv.style.display = 'block';
-    resultDiv.innerHTML = 'Загрузка...';
-    
-    try {
-        const response = await fetch('/api/quote');
-        const data = await response.json();
-        resultDiv.innerHTML = `
-            <em>"${data.quote}"</em><br>
-            <strong>— ${data.author}</strong><br>
-            <small>Источник: ${data.source}</small>
-        `;
-    } catch (e) {
-        resultDiv.innerHTML = 'Ошибка загрузки цитаты';
-    }
-}
-
-function askAlice() {
-    const chatDiv = document.getElementById('alice-chat');
-    chatDiv.style.display = 'block';
-    addChatMessage('Алиса', 'Здравствуйте! Я Алиса, ваш помощник в мире капсул времени. Чем могу помочь?');
-}
-
 function addChatMessage(sender, message) {
     const chatMessages = document.getElementById('chat-messages');
     const messageDiv = document.createElement('div');
@@ -134,7 +83,7 @@ async function sendToAlice() {
     }
 }
 
-// Обработка Enter в поле ввода
+// Обработка Enter в поле ввода и приветственное сообщение
 document.addEventListener('DOMContentLoaded', function() {
     const aliceInput = document.getElementById('alice-input');
     if (aliceInput) {
@@ -144,6 +93,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    // Приветственное сообщение от Алисы при загрузке страницы
+    addChatMessage('Алиса', 'Здравствуйте! Я Яндекс Алиса, ваш помощник. Чем могу помочь?');
 });
 </script>
 
