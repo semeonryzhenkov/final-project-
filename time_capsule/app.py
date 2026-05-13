@@ -307,55 +307,140 @@ class QuoteAPI(Resource):
 
 
 class AliceAI(Resource):
-    """Интеграция с Алисой AI через Яндекс Диалоги API"""
+    """Интеграция с Алисой - WebHook сервер по правилам Яндекс Диалогов"""
     
+    # Хранилище сессий (в памяти, для примера)
+    sessionStorage = {}
+
     def post(self):
-        """Отправить запрос к Алисе и получить ответ"""
-        data = request.get_json()
-        if not data or 'message' not in data:
-            return {'error': 'Требуется поле message'}, 400
+        """Обработка запроса от Алисы (WebHook) по протоколу Яндекс Диалогов"""
+        req = request.get_json()
         
-        user_message = data['message']
-        session_id = data.get('session_id', str(uuid.uuid4()))
+        if not req:
+            return {'error': 'Нет данных'}, 400
         
-        # Формируем запрос к Яндекс Диалогам API (Алиса)
-        # Примечание: Для продакшена нужен OAuth токен Яндекс
-        alice_url = "https://dialogs.yandex.net/api/v1/skills/your-skill-id/message"
+        # Логирование запроса (как в уроке)
+        app.logger.info(f'Alice Request: {req!r}')
         
-        # Так как у нас нет реального токена, эмулируем ответ Алисы
-        # В реальном проекте здесь был бы запрос к API Яндекса
-        alice_response = self._generate_alice_response(user_message)
+        user_id = req['session']['user_id']
         
-        return {
-            'session_id': session_id,
-            'user_message': user_message,
-            'alice_response': alice_response,
-            'source': 'Алиса AI (эмуляция)'
-        }, 200
+        # Формируем базовый ответ согласно документации
+        response = {
+            'session': req['session'],
+            'version': req['version'],
+            'response': {
+                'end_session': False
+            }
+        }
+        
+        # Обработка диалога
+        self.handle_dialog(req, response)
+        
+        app.logger.info(f'Alice Response: {response!r}')
+        
+        return response, 200
     
-    def _generate_alice_response(self, message):
-        """Генерация ответа Алисы на основе контекста капсул времени"""
-        message_lower = message.lower()
+    def handle_dialog(self, req, res):
+        """Логика диалога на основе урока"""
+        user_id = req['session']['user_id']
         
-        if 'капсул' in message_lower or 'врем' in message_lower:
-            return "Капсула времени — это прекрасная возможность сохранить свои мысли и воспоминания для будущего. Вы можете создать капсулу прямо сейчас!"
-        elif 'привет' in message_lower or 'здравствуй' in message_lower:
-            return "Здравствуйте! Я Алиса, ваш помощник в мире капсул времени. Чем могу помочь?"
-        elif 'созда' in message_lower or 'напиш' in message_lower:
-            return "Чтобы создать капсулу, перейдите на страницу создания и заполните форму. Не забудьте указать дату открытия!"
-        elif 'откры' in message_lower:
-            return "Проверьте статус ваших капсул на странице просмотра. Если дата наступила, вы сможете открыть послание."
-        elif 'совет' in message_lower or 'иде' in message_lower:
-            ideas = [
-                "Напишите письмо себе через год с описанием текущих целей.",
-                "Сохраните воспоминания о важном событии сегодняшнего дня.",
-                "Запишите предсказания о том, каким будет мир через 5 лет.",
-                "Оставьте послание будущим поколениям вашей семьи."
-            ]
-            import random
-            return f"Идея для капсулы: {random.choice(ideas)}"
+        # Новая сессия?
+        if req['session']['new']:
+            # Инициализируем сессию с подсказками
+            self.sessionStorage[user_id] = {
+                'suggests': [
+                    "Что такое WebHook?",
+                    "Как работает логирование?",
+                    "Что такое именованные сущности?"
+                ]
+            }
+            res['response']['text'] = (
+                "Привет! Я Алиса из урока по промышленному программированию. "
+                "Я помогу вам разобраться с темой интеграции голосового помощника. "
+                "Спросите меня про WebHook, логирование или именованные сущности!"
+            )
+            res['response']['buttons'] = self.get_suggests(user_id)
+            return
+        
+        # Получаем текст пользователя
+        utterance = req['request']['original_utterance'].lower()
+        
+        # Ответы на основе учебного материала
+        if any(word in utterance for word in ['webhook', 'вебхук', 'web-hook']):
+            res['response']['text'] = (
+                "WebHook — это способ интеграции, при котором Алиса сама обращается к вашему API. "
+                "В отличие от классического API, где вы опрашиваете сервер, здесь сервер сам сообщает о событиях. "
+                "Мы реализуем свой endpoint, который Алиса вызывает при каждом обращении пользователя."
+            )
+            res['response']['buttons'] = self.get_suggests(user_id)
+            
+        elif any(word in utterance for word in ['логирова', 'лог', 'journal']):
+            res['response']['text'] = (
+                "Логирование — это запись событий программы в файл или консоль. "
+                "В Python используется библиотека logging. Уровни: DEBUG (отладка), INFO (информация), "
+                "WARNING (предупреждение), ERROR (ошибка), CRITICAL (критическая ошибка). "
+                "В production логи пишут в файл с временными метками."
+            )
+            res['response']['buttons'] = self.get_suggests(user_id)
+            
+        elif any(word in utterance for word in ['сущност', 'entity', 'nlu']):
+            res['response']['text'] = (
+                "Именованные сущности — это автоматически распознанные данные: имена, города, даты, числа. "
+                "Алиса разбирает запрос пользователя и помещает их в раздел nlu.entities JSON запроса. "
+                "Типы: YANDEX.GEO (география), YANDEX.FIO (имена), YANDEX.NUMBER (числа), YANDEX.DATETIME (даты)."
+            )
+            res['response']['buttons'] = self.get_suggests(user_id)
+            
+        elif any(word in utterance for word in ['flask', 'фласк']):
+            res['response']['text'] = (
+                "Flask — это микро-фреймворк на Python для создания веб-приложений. "
+                "Мы используем его для создания WebHook endpoint'а. Декоратор @app.route('/post', methods=['POST']) "
+                "обрабатывает POST запросы от Алисы с JSON данными."
+            )
+            res['response']['buttons'] = self.get_suggests(user_id)
+            
+        elif any(word in utterance for word in ['json', 'джсон']):
+            res['response']['text'] = (
+                "JSON — формат обмена данными. Алиса присылает JSON с полями: request (запрос пользователя), "
+                "session (данные сессии), version. Мы возвращаем JSON с response (текст, кнопки, end_session) "
+                "и session (копия из запроса)."
+            )
+            res['response']['buttons'] = self.get_suggests(user_id)
+            
+        elif any(word in utterance for word in ['пока', 'до свидани', 'законч', 'хватит']):
+            res['response']['text'] = "Удачи в изучении промышленного программирования! Заходите ещё!"
+            res['response']['end_session'] = True
+            
         else:
-            return "Я могу помочь вам с созданием и управлением капсулами времени. Спросите меня о том, как создать капсулу, открыть её или получить идею для послания."
+            # Дефолтный ответ
+            res['response']['text'] = (
+                f"Вы сказали: '{req['request']['original_utterance']}'. "
+                "Я могу рассказать про WebHook, логирование, именованные сущности, Flask или JSON. "
+                "Что вас интересует?"
+            )
+            res['response']['buttons'] = self.get_suggests(user_id)
+    
+    def get_suggests(self, user_id):
+        """Возвращает подсказки (кнопки) для пользователя"""
+        session = self.sessionStorage.get(user_id)
+        if not session or not session.get('suggests'):
+            return []
+        
+        # Берем первые две подсказки
+        suggests = [
+            {'title': suggest, 'hide': True}
+            for suggest in session['suggests'][:2]
+        ]
+        
+        # Удаляем первую подсказку для разнообразия
+        session['suggests'] = session['suggests'][1:]
+        self.sessionStorage[user_id] = session
+        
+        # Если мало подсказок, добавляем завершающую
+        if len(suggests) < 2:
+            suggests.append({'title': "Рассказать про всё", 'hide': True})
+        
+        return suggests
 
 
 class StatsAPI(Resource):

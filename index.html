@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Алиса: Купи слона</title>
+    <title>Алиса: Промышленное программирование</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -39,14 +39,6 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-        }
-
-        .chat-header img {
-            width: 30px;
-            height: 30px;
-            background: white;
-            border-radius: 50%;
-            padding: 2px;
         }
 
         .chat-messages {
@@ -149,10 +141,9 @@
             width: 20px;
             height: 20px;
             fill: white;
-            margin-left: 2px; /* Visual correction */
+            margin-left: 2px;
         }
 
-        /* Animation for new messages */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -161,23 +152,31 @@
         .message {
             animation: fadeIn 0.3s ease-out;
         }
+        
+        .typing-indicator {
+            font-style: italic;
+            color: #888;
+            font-size: 12px;
+            margin-left: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
 
 <div class="chat-container">
     <div class="chat-header">
-        <!-- Yandex Alice Logo Placeholder -->
         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <circle cx="12" cy="12" r="12" fill="#FFCC00"/>
             <path d="M12 6C9 6 7 8 7 11C7 14 9 16 12 16C15 16 17 14 17 11C17 8 15 6 12 6ZM12 14C10 14 9 13 9 11C9 9 10 8 12 8C14 8 15 9 15 11C15 13 14 14 12 14Z" fill="#333"/>
         </svg>
-        Алиса
+        Алиса (WebHook)
     </div>
 
     <div class="chat-messages" id="chatMessages">
         <!-- Messages will appear here -->
     </div>
+    <div class="typing-indicator" id="typingIndicator">Алиса печатает...</div>
 
     <div class="chat-input-area">
         <input type="text" class="chat-input" id="userInput" placeholder="Напишите сообщение..." autocomplete="off">
@@ -188,18 +187,15 @@
 </div>
 
 <script>
-    // Логика навыка "Купи слона"
-    const sessionStorage = {};
-    let currentUserId = 'user_' + Math.random().toString(36).substr(2, 9);
-
+    // Клиентская часть: только отображение и отправка запросов на сервер
     const chatMessages = document.getElementById('chatMessages');
     const userInput = document.getElementById('userInput');
     const sendBtn = document.getElementById('sendBtn');
+    const typingIndicator = document.getElementById('typingIndicator');
 
-    // Инициализация сессии
-    sessionStorage[currentUserId] = {
-        suggests: ["Не хочу.", "Не буду.", "Отстань!"]
-    };
+    // Генерируем уникальный ID сессии для пользователя
+    const sessionId = 'sess_' + Math.random().toString(36).substr(2, 9);
+    const userId = 'user_' + Math.random().toString(36).substr(2, 9);
 
     function addMessage(text, sender, buttons = []) {
         const msgDiv = document.createElement('div');
@@ -209,7 +205,7 @@
         textSpan.textContent = text;
         msgDiv.appendChild(textSpan);
 
-        if (buttons.length > 0) {
+        if (buttons && buttons.length > 0) {
             const suggestionsDiv = document.createElement('div');
             suggestionsDiv.className = 'suggestions';
             
@@ -218,7 +214,6 @@
                 chip.className = 'suggestion-chip';
                 chip.textContent = btn.title;
                 chip.onclick = () => {
-                    userInput.value = btn.title;
                     handleUserRequest(btn.title);
                 };
                 suggestionsDiv.appendChild(chip);
@@ -230,73 +225,56 @@
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    function handleUserRequest(text) {
+    async function handleUserRequest(text) {
         if (!text.trim()) return;
 
         // Добавляем сообщение пользователя
         addMessage(text, 'user');
         userInput.value = '';
+        typingIndicator.style.display = 'block';
 
-        // Имитация задержки ответа Алисы
-        setTimeout(() => {
-            processAliceResponse(text);
-        }, 600);
-    }
-
-    function processAliceResponse(userText) {
-        const session = sessionStorage[currentUserId];
-        const lowerText = userText.toLowerCase();
-
-        let responseText = '';
-        let buttons = [];
-        let endSession = false;
-
-        // Логика из урока
-        if (['ладно', 'куплю', 'покупаю', 'хорошо'].includes(lowerText)) {
-            responseText = 'Слона можно найти на Яндекс.Маркете!';
-            endSession = true;
-        } else {
-            responseText = `Все говорят "${userText}", а ты купи слона!`;
-            buttons = getSuggests(currentUserId);
-        }
-
-        addMessage(responseText, 'alice', buttons);
-
-        if (endSession) {
-            setTimeout(() => {
-                addMessage("Диалог завершен. Обновите страницу, чтобы начать заново.", 'alice');
-            }, 1000);
-        }
-    }
-
-    function getSuggests(userId) {
-        const session = sessionStorage[userId];
-        if (!session || !session.suggests || session.suggests.length === 0) {
-            return [{
-                title: "Ладно",
-                url: "https://market.yandex.ru/search?text=слон"
-            }];
-        }
-
-        // Берем первые две подсказки
-        const currentSuggests = session.suggests.slice(0, 2);
-        const buttons = currentSuggests.map(text => ({ title: text }));
-
-        // Удаляем первую подсказку для следующего раза
-        session.suggests = session.suggests.slice(1);
-        
-        // Если осталась одна или меньше, добавляем кнопку "Ладно"
-        if (session.suggests.length < 2) {
-             buttons.push({
-                title: "Ладно",
-                url: "https://market.yandex.ru/search?text=слон"
+        try {
+            // Отправляем запрос на НАШ сервер (WebHook эмуляция)
+            const response = await fetch('/api/alice', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    request: {
+                        command: '',
+                        original_utterance: text
+                    },
+                    session: {
+                        new: false,
+                        message_id: Date.now().toString(),
+                        session_id: sessionId,
+                        user_id: userId
+                    },
+                    version: "1.0"
+                })
             });
-        }
 
-        return buttons;
+            const data = await response.json();
+            
+            typingIndicator.style.display = 'none';
+
+            if (data.response && data.response.text) {
+                addMessage(data.response.text, 'alice', data.response.buttons);
+                
+                if (data.response.end_session) {
+                    setTimeout(() => {
+                        addMessage("Сессия завершена. Обновите страницу для нового диалога.", 'alice');
+                    }, 1000);
+                }
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            typingIndicator.style.display = 'none';
+            addMessage("Ошибка соединения с сервером навыков.", 'alice');
+        }
     }
 
-    // Обработчики событий
     sendBtn.addEventListener('click', () => {
         handleUserRequest(userInput.value);
     });
@@ -307,12 +285,33 @@
         }
     });
 
-    // Приветственное сообщение при загрузке
-    window.onload = () => {
-        setTimeout(() => {
-            const initialButtons = getSuggests(currentUserId);
-            addMessage('Привет! Купи слона!', 'alice', initialButtons);
-        }, 500);
+    // Приветственное сообщение (запрашиваем у сервера как новый диалог)
+    window.onload = async () => {
+        typingIndicator.style.display = 'block';
+        try {
+            const response = await fetch('/api/alice', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    request: { command: '', original_utterance: '' },
+                    session: {
+                        new: true,
+                        message_id: '0',
+                        session_id: sessionId,
+                        user_id: userId
+                    },
+                    version: "1.0"
+                })
+            });
+            const data = await response.json();
+            typingIndicator.style.display = 'none';
+            if (data.response && data.response.text) {
+                addMessage(data.response.text, 'alice', data.response.buttons);
+            }
+        } catch (e) {
+            typingIndicator.style.display = 'none';
+            addMessage("Привет! Я навык из урока. (Сервер не отвечает)", 'alice');
+        }
     };
 </script>
 
