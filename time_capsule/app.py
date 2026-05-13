@@ -159,7 +159,7 @@ def all_capsules():
         query = query.filter(Capsule.title.contains(search))
     
     capsules = query.order_by(Capsule.open_at.asc()).all()
-    return render_template('all.html', capsules=capsules, current_category=category, search=search)
+    return render_template('all.html', capsules=capsules, current_category=category, search=search, now=datetime.utcnow)
 
 
 # ==================== REST API (WEB 5, WEB 6 - Flask-RESTful) ====================
