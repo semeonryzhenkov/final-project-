@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>📊 Статистика</h2>
+<div class="stats">
+    <div class="stat-card">
+        <h3>{{ stats.total }}</h3>
+        <p>Всего капсул</p>
+    </div>
+    <div class="stat-card">
+        <h3>{{ stats.opened }}</h3>
+        <p>Открыто</p>
+    </div>
+    <div class="stat-card">
+        <h3>{{ stats.pending }}</h3>
+        <p>Ожидает открытия</p>
+    </div>
+</div>
+
+<!-- Внешние API для вдохновения -->
+<div class="api-section" style="margin: 30px 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px;">
+    <h3>🌟 Вдохновение от внешних API</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+        <button onclick="getWeatherIdea()" class="btn" style="background: rgba(255,255,255,0.2);">🌤️ Погода + Идея</button>
+        <button onclick="getQuote()" class="btn" style="background: rgba(255,255,255,0.2);">💭 Цитата дня</button>
+    </div>
+    <div id="api-result" style="margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.9); border-radius: 8px; display: none;"></div>
+</div>
+
+<script>
+async function getWeatherIdea() {
+    const resultDiv = document.getElementById('api-result');
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = 'Загрузка...';
+    
+    try {
+        const response = await fetch('/api/weather-idea');
+        const data = await response.json();
+        resultDiv.innerHTML = `
+            <strong>🌤️ Погода:</strong> ${data.weather.temperature}, ветер ${data.weather.windspeed}<br>
+            <strong>💡 Идея:</strong> ${data.capsule_idea}<br>
+            <small>Источник: ${data.source}</small>
+        `;
+    } catch (e) {
+        resultDiv.innerHTML = 'Ошибка загрузки погоды';
+    }
+}
+
+async function getQuote() {
+    const resultDiv = document.getElementById('api-result');
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = 'Загрузка...';
+    
+    try {
+        const response = await fetch('/api/quote');
+        const data = await response.json();
+        resultDiv.innerHTML = `
+            <em>"${data.quote}"</em><br>
+            <strong>— ${data.author}</strong><br>
+            <small>Источник: ${data.source}</small>
+        `;
+    } catch (e) {
+        resultDiv.innerHTML = 'Ошибка загрузки цитаты';
+    }
+}
+</script>
+
+<h2>➕ Быстрое создание капсулы</h2>
+<form method="POST" action="{{ url_for('create_capsule') }}">
+    {{ form.hidden_tag() }}
+    
+    <div class="form-group">
+        {{ form.title.label }}
+        {{ form.title() }}
+    </div>
+    
+    <div class="form-group">
+        {{ form.content.label }}
+        {{ form.content() }}
+    </div>
+    
+    <div class="form-group">
+        {{ form.author.label }}
+        {{ form.author() }}
+    </div>
+    
+    <div class="form-group">
+        {{ form.open_date.label }}
+        {{ form.open_date() }}
+    </div>
+    
+    <div class="form-group">
+        {{ form.category.label }}
+        {{ form.category() }}
+    </div>
+    
+    <div class="form-group">
+        {{ form.email.label }}
+        {{ form.email() }}
+    </div>
+    
+    {{ form.submit() }}
+</form>
+
+<h2 style="margin-top: 40px;">📬 Последние капсулы</h2>
+<div class="capsule-list">
+    {% for capsule in capsules %}
+    <div class="capsule-item">
+        <h3>{{ capsule.title }}</h3>
+        <div class="capsule-meta">
+            <span class="badge badge-{{ capsule.category }}">{{ capsule.category }}</span>
+            <span class="badge badge-{{ 'opened' if capsule.is_opened else 'pending' }}">
+                {{ 'Открыта' if capsule.is_opened else 'Закрыта' }}
+            </span>
+            <p>Автор: {{ capsule.author }} | 
+               Создана: {{ capsule.created_at.strftime('%d.%m.%Y') }} | 
+               Открытие: {{ capsule.open_at.strftime('%d.%m.%Y %H:%M') }}
+            </p>
+        </div>
+        <a href="{{ url_for('view_capsule', capsule_id=capsule.id) }}" class="btn">Посмотреть</a>
+    </div>
+    {% else %}
+    <p>Пока нет созданных капсул. Будьте первым!</p>
+    {% endfor %}
+</div>
+{% endblock %}

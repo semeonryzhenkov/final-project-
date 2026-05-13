@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>📚 Все капсулы времени</h2>
+
+<div style="margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 10px;">
+    <form method="GET" style="display: flex; gap: 15px; flex-wrap: wrap; align-items: end;">
+        <div style="flex: 1; min-width: 200px;">
+            <label for="category" style="font-weight: bold; color: #333;">Категория:</label>
+            <select name="category" id="category" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px;">
+                <option value="all" {% if current_category == 'all' %}selected{% endif %}>Все категории</option>
+                <option value="personal" {% if current_category == 'personal' %}selected{% endif %}>Личное</option>
+                <option value="memory" {% if current_category == 'memory' %}selected{% endif %}>Воспоминание</option>
+                <option value="goal" {% if current_category == 'goal' %}selected{% endif %}>Цель</option>
+                <option value="message" {% if current_category == 'message' %}selected{% endif %}>Послание будущему</option>
+            </select>
+        </div>
+        
+        <div style="flex: 2; min-width: 200px;">
+            <label for="search" style="font-weight: bold; color: #333;">Поиск по названию:</label>
+            <input type="text" name="search" id="search" value="{{ search }}" placeholder="Введите название..." 
+                   style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px;">
+        </div>
+        
+        <button type="submit" class="btn">🔍 Найти</button>
+        <a href="{{ url_for('all_capsules') }}" class="btn" style="background: #6c757d;">Сбросить</a>
+    </form>
+</div>
+
+<div class="capsule-list">
+    {% for capsule in capsules %}
+    <div class="capsule-item">
+        <div style="display: flex; justify-content: space-between; align-items: start;">
+            <div style="flex: 1;">
+                <h3>{{ capsule.title }}</h3>
+                <div class="capsule-meta">
+                    <span class="badge badge-{{ capsule.category }}">{{ capsule.category }}</span>
+                    <span class="badge badge-{{ 'opened' if capsule.is_opened else 'pending' }}">
+                        {{ 'Открыта' if capsule.is_opened else 'Закрыта' }}
+                    </span>
+                    <p style="margin-top: 10px;">
+                        <strong>Автор:</strong> {{ capsule.author }} | 
+                        <strong>Открытие:</strong> {{ capsule.open_at.strftime('%d.%m.%Y %H:%M') }}
+                        {% if not capsule.is_opened %}
+                            | <strong>Осталось дней:</strong> {{ (capsule.open_at - now()).days if capsule.open_at > now() else 0 }}
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            <a href="{{ url_for('view_capsule', capsule_id=capsule.id) }}" class="btn">Посмотреть</a>
+        </div>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 40px; color: #666;">
+        <p style="font-size: 3em; margin-bottom: 20px;">📭</p>
+        <p>Капсул не найдено</p>
+        <a href="{{ url_for('create_capsule') }}" class="btn" style="margin-top: 20px;">Создать первую капсулу</a>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Функция для получения текущего времени -->
+{% set now = datetime.utcnow %}
+{% endblock %}

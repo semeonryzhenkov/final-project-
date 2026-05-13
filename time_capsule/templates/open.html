@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>🎉 Открытие капсулы #{{ capsule.id }}</h2>
+
+<div style="text-align: center; padding: 30px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border-radius: 10px; margin-bottom: 30px;">
+    <p style="font-size: 4em; margin-bottom: 10px;">🎊</p>
+    <h3 style="margin-bottom: 10px;">Вы готовы открыть эту капсулу?</h3>
+    <p>Это действие нельзя отменить!</p>
+</div>
+
+<div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+    <h3>{{ capsule.title }}</h3>
+    <p><strong>Автор:</strong> {{ capsule.author }}</p>
+    <p><strong>Дата создания:</strong> {{ capsule.created_at.strftime('%d.%m.%Y в %H:%M') }}</p>
+    <p><strong>Запланированное открытие:</strong> {{ capsule.open_at.strftime('%d.%m.%Y в %H:%M') }}</p>
+</div>
+
+<form method="POST">
+    {{ form.hidden_tag() }}
+    
+    <div class="form-group">
+        {{ form.capsule_id.label }}
+        {{ form.capsule_id(value=capsule.id, readonly=True) }}
+    </div>
+    
+    <div style="display: flex; gap: 10px;">
+        {{ form.submit(class='btn') }}
+        <a href="{{ url_for('view_capsule', capsule_id=capsule.id) }}" class="btn" style="background: #6c757d;">
+            Отмена
+        </a>
+    </div>
+</form>
+{% endblock %}
