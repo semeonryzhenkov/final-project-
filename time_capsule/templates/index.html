@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>📊 Статистика</h2>
+<h2>Статистика</h2>
 <div class="stats">
     <div class="stat-card">
         <h3>{{ stats.total }}</h3>
@@ -19,10 +19,10 @@
 
 <!-- Внешние API для вдохновения -->
 <div class="api-section" style="margin: 30px 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px;">
-    <h3>🌟 Вдохновение от внешних API</h3>
+    <h3>Вдохновение от внешних API</h3>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
-        <button onclick="getWeatherIdea()" class="btn" style="background: rgba(255,255,255,0.2);">🌤️ Погода + Идея</button>
-        <button onclick="getQuote()" class="btn" style="background: rgba(255,255,255,0.2);">💭 Цитата дня</button>
+        <button onclick="getWeatherIdea()" class="btn" style="background: rgba(255,255,255,0.2);">Погода + Идея</button>
+        <button onclick="getQuote()" class="btn" style="background: rgba(255,255,255,0.2);">Цитата дня</button>
     </div>
     <div id="api-result" style="margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.9); border-radius: 8px; display: none;"></div>
 </div>
@@ -37,8 +37,8 @@ async function getWeatherIdea() {
         const response = await fetch('/api/weather-idea');
         const data = await response.json();
         resultDiv.innerHTML = `
-            <strong>🌤️ Погода:</strong> ${data.weather.temperature}, ветер ${data.weather.windspeed}<br>
-            <strong>💡 Идея:</strong> ${data.capsule_idea}<br>
+            <strong>Погода:</strong> ${data.weather.temperature}, ветер ${data.weather.windspeed}<br>
+            <strong>Идея:</strong> ${data.capsule_idea}<br>
             <small>Источник: ${data.source}</small>
         `;
     } catch (e) {
@@ -65,7 +65,7 @@ async function getQuote() {
 }
 </script>
 
-<h2>➕ Быстрое создание капсулы</h2>
+<h2>Быстрое создание капсулы</h2>
 <form method="POST" action="{{ url_for('create_capsule') }}">
     {{ form.hidden_tag() }}
     
@@ -102,7 +102,7 @@ async function getQuote() {
     {{ form.submit() }}
 </form>
 
-<h2 style="margin-top: 40px;">📬 Последние капсулы</h2>
+<h2 style="margin-top: 40px;">Последние капсулы</h2>
 <div class="capsule-list">
     {% for capsule in capsules %}
     <div class="capsule-item">
