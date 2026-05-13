@@ -159,7 +159,8 @@ def all_capsules():
         query = query.filter(Capsule.title.contains(search))
     
     capsules = query.order_by(Capsule.open_at.asc()).all()
-    return render_template('all.html', capsules=capsules, current_category=category, search=search, now=datetime.utcnow)
+    now = datetime.utcnow()
+    return render_template('all.html', capsules=capsules, current_category=category, search=search, now=now)
 
 
 # ==================== REST API (WEB 5, WEB 6 - Flask-RESTful) ====================
@@ -314,111 +315,178 @@ class AliceAI(Resource):
 
     def post(self):
         """Обработка запроса от Алисы (WebHook) по протоколу Яндекс Диалогов"""
-        req = request.get_json()
-        
-        if not req:
-            return {'error': 'Нет данных'}, 400
-        
-        # Логирование запроса (как в уроке)
-        app.logger.info(f'Alice Request: {req!r}')
-        
-        user_id = req['session']['user_id']
-        
-        # Формируем базовый ответ согласно документации
-        response = {
-            'session': req['session'],
-            'version': req['version'],
-            'response': {
-                'end_session': False
+        try:
+            req = request.get_json()
+            
+            if not req:
+                app.logger.error('Получен пустой JSON')
+                return {
+                    'response': {'text': 'Ошибка: нет данных в запросе', 'end_session': False},
+                    'session': {},
+                    'version': '1.0'
+                }, 200
+            
+            # Логирование запроса (как в уроке)
+            app.logger.info(f'Alice Request: {req!r}')
+            
+            # Проверяем обязательные поля
+            if 'session' not in req or 'user_id' not in req.get('session', {}):
+                app.logger.error('Отсутствует session или user_id')
+                return {
+                    'response': {'text': 'Ошибка формата запроса', 'end_session': False},
+                    'session': {},
+                    'version': '1.0'
+                }, 200
+            
+            user_id = req['session']['user_id']
+            
+            # Формируем базовый ответ согласно документации
+            response = {
+                'session': req['session'],
+                'version': req.get('version', '1.0'),
+                'response': {
+                    'end_session': False
+                }
             }
-        }
-        
-        # Обработка диалога
-        self.handle_dialog(req, response)
-        
-        app.logger.info(f'Alice Response: {response!r}')
-        
-        return response, 200
+            
+            # Обработка диалога
+            self.handle_dialog(req, response)
+            
+            app.logger.info(f'Alice Response: {response!r}')
+            
+            return response, 200
+            
+        except Exception as e:
+            app.logger.error(f'Критическая ошибка в AliceAI: {str(e)}', exc_info=True)
+            # Возвращаем безопасный ответ даже при ошибке
+            return {
+                'response': {
+                    'text': 'Произошла ошибка на сервере. Попробуйте позже.',
+                    'end_session': False
+                },
+                'session': req.get('session', {}) if 'req' in locals() else {},
+                'version': '1.0'
+            }, 200
     
     def handle_dialog(self, req, res):
-        """Логика диалога на основе урока"""
-        user_id = req['session']['user_id']
-        
-        # Новая сессия?
-        if req['session']['new']:
-            # Инициализируем сессию с подсказками
-            self.sessionStorage[user_id] = {
-                'suggests': [
-                    "Что такое WebHook?",
-                    "Как работает логирование?",
-                    "Что такое именованные сущности?"
+        """Логика диалога - универсальный помощник"""
+        try:
+            user_id = req['session']['user_id']
+            utterance = req['request'].get('original_utterance', '').lower().strip()
+            
+            # Новая сессия?
+            if req['session'].get('new', False):
+                self.sessionStorage[user_id] = {
+                    'suggests': [
+                        "Расскажи про Капсулы времени",
+                        "Что такое WebHook?",
+                        "Как работает логирование?"
+                    ]
+                }
+                res['response']['text'] = (
+                    "Здравствуйте! Я Яндекс Алиса, ваш помощник. "
+                    "Я могу рассказать про Капсулы времени, Flask, логирование или WebHook. "
+                    "Чем могу помочь?"
+                )
+                res['response']['buttons'] = self.get_suggests(user_id)
+                return
+            
+            # Команды выхода
+            if any(word in utterance for word in ['пока', 'до свидани', 'законч', 'хватит', 'стоп']):
+                res['response']['text'] = "До свидания! Удачной работы!"
+                res['response']['end_session'] = True
+                return
+            
+            # Ответы на вопросы по уроку
+            if any(word in utterance for word in ['капсул', 'послан', 'врем', 'открыт', 'созда']):
+                res['response']['text'] = (
+                    "Капсула времени — это послание в будущее. "
+                    "Вы создаёте её сейчас, указываете дату открытия, "
+                    "и сервер хранит её до наступления этой даты. "
+                    "Проект использует Flask, SQLite и WTForms."
+                )
+                res['response']['buttons'] = self.get_suggests(user_id)
+                
+            elif any(word in utterance for word in ['flask', 'фласк', 'сервер', 'python']):
+                res['response']['text'] = (
+                    "Flask — микрофреймворк на Python для веб-приложений. "
+                    "В этом проекте он обрабатывает WebHook от Алисы, "
+                    "работает с базой данных и отдаёт HTML-шаблоны."
+                )
+                res['response']['buttons'] = self.get_suggests(user_id)
+                
+            elif any(word in utterance for word in ['вебхук', 'webhook', 'web-hook', 'интеграц']):
+                res['response']['text'] = (
+                    "WebHook — это когда Алиса сама стучится на наш сервер. "
+                    "Мы не опрашиваем её API, а просто ждём POST-запрос на /api/alice. "
+                    "Это удобно: не надо постоянно спрашивать 'есть новые сообщения?'."
+                )
+                res['response']['buttons'] = self.get_suggests(user_id)
+                
+            elif any(word in utterance for word in ['логирова', 'лог', 'journal', 'debug']):
+                res['response']['text'] = (
+                    "Логирование записывает события программы в файл или консоль. "
+                    "Уровни: DEBUG (отладка), INFO (инфо), WARNING (предупреждение), "
+                    "ERROR (ошибка), CRITICAL (критическая ошибка). "
+                    "Используется библиотека logging."
+                )
+                res['response']['buttons'] = self.get_suggests(user_id)
+                
+            elif any(word in utterance for word in ['сущност', 'entity', 'nlu', 'geo', 'fio']):
+                res['response']['text'] = (
+                    "Именованные сущности — это то, что Алиса понимает: "
+                    "города (YANDEX.GEO), имена (YANDEX.FIO), числа, даты. "
+                    "Они приходят в JSON в поле request.nlu.entities."
+                )
+                res['response']['buttons'] = self.get_suggests(user_id)
+                
+            elif any(word in utterance for word in ['json', 'джсон', 'формат']):
+                res['response']['text'] = (
+                    "Алиса шлёт JSON с полями: request (что сказал пользователь), "
+                    "session (данные сессии), version. "
+                    "Мы отвечаем JSON с response.text и response.buttons."
+                )
+                res['response']['buttons'] = self.get_suggests(user_id)
+            
+            # Универсальные ответы на обычные вопросы
+            elif any(word in utterance for word in ['привет', 'здравствуй', 'hello']):
+                res['response']['text'] = "Привет! Чем могу помочь сегодня?"
+                res['response']['buttons'] = self.get_suggests(user_id)
+                
+            elif any(word in utterance for word in ['как дела', 'дела', 'жизнь']):
+                res['response']['text'] = "У меня всё отлично! Я ведь программа. Как ваши дела?"
+                res['response']['buttons'] = self.get_suggests(user_id)
+                
+            elif any(word in utterance for word in ['кто ты', 'что ты', 'как тебя зовут']):
+                res['response']['text'] = (
+                    "Я учебный навык Алисы, созданный на Flask. "
+                    "Помогаю изучать промышленное программирование."
+                )
+                res['response']['buttons'] = self.get_suggests(user_id)
+                
+            elif any(word in utterance for word in ['путин', 'президент', 'политик', 'россия']):
+                res['response']['text'] = (
+                    "Я создана для изучения программирования. "
+                    "Давайте лучше обсудим Flask, логирование или Капсулы времени!"
+                )
+                res['response']['buttons'] = self.get_suggests(user_id)
+                
+            else:
+                # Дефолтный ответ на непонятное
+                res['response']['text'] = (
+                    f"Интересный вопрос: '{req['request'].get('original_utterance', '')}'. "
+                    "Я пока учусь и могу ответить только на вопросы про программирование. "
+                    "Спросите про Flask, WebHook, логирование или Капсулы времени!"
+                )
+                res['response']['buttons'] = [
+                    {'title': 'Что такое Flask?', 'hide': True},
+                    {'title': 'Расскажи про WebHook', 'hide': True}
                 ]
-            }
-            res['response']['text'] = (
-                "Привет! Я Алиса из урока по промышленному программированию. "
-                "Я помогу вам разобраться с темой интеграции голосового помощника. "
-                "Спросите меня про WebHook, логирование или именованные сущности!"
-            )
-            res['response']['buttons'] = self.get_suggests(user_id)
-            return
-        
-        # Получаем текст пользователя
-        utterance = req['request']['original_utterance'].lower()
-        
-        # Ответы на основе учебного материала
-        if any(word in utterance for word in ['webhook', 'вебхук', 'web-hook']):
-            res['response']['text'] = (
-                "WebHook — это способ интеграции, при котором Алиса сама обращается к вашему API. "
-                "В отличие от классического API, где вы опрашиваете сервер, здесь сервер сам сообщает о событиях. "
-                "Мы реализуем свой endpoint, который Алиса вызывает при каждом обращении пользователя."
-            )
-            res['response']['buttons'] = self.get_suggests(user_id)
-            
-        elif any(word in utterance for word in ['логирова', 'лог', 'journal']):
-            res['response']['text'] = (
-                "Логирование — это запись событий программы в файл или консоль. "
-                "В Python используется библиотека logging. Уровни: DEBUG (отладка), INFO (информация), "
-                "WARNING (предупреждение), ERROR (ошибка), CRITICAL (критическая ошибка). "
-                "В production логи пишут в файл с временными метками."
-            )
-            res['response']['buttons'] = self.get_suggests(user_id)
-            
-        elif any(word in utterance for word in ['сущност', 'entity', 'nlu']):
-            res['response']['text'] = (
-                "Именованные сущности — это автоматически распознанные данные: имена, города, даты, числа. "
-                "Алиса разбирает запрос пользователя и помещает их в раздел nlu.entities JSON запроса. "
-                "Типы: YANDEX.GEO (география), YANDEX.FIO (имена), YANDEX.NUMBER (числа), YANDEX.DATETIME (даты)."
-            )
-            res['response']['buttons'] = self.get_suggests(user_id)
-            
-        elif any(word in utterance for word in ['flask', 'фласк']):
-            res['response']['text'] = (
-                "Flask — это микро-фреймворк на Python для создания веб-приложений. "
-                "Мы используем его для создания WebHook endpoint'а. Декоратор @app.route('/post', methods=['POST']) "
-                "обрабатывает POST запросы от Алисы с JSON данными."
-            )
-            res['response']['buttons'] = self.get_suggests(user_id)
-            
-        elif any(word in utterance for word in ['json', 'джсон']):
-            res['response']['text'] = (
-                "JSON — формат обмена данными. Алиса присылает JSON с полями: request (запрос пользователя), "
-                "session (данные сессии), version. Мы возвращаем JSON с response (текст, кнопки, end_session) "
-                "и session (копия из запроса)."
-            )
-            res['response']['buttons'] = self.get_suggests(user_id)
-            
-        elif any(word in utterance for word in ['пока', 'до свидани', 'законч', 'хватит']):
-            res['response']['text'] = "Удачи в изучении промышленного программирования! Заходите ещё!"
-            res['response']['end_session'] = True
-            
-        else:
-            # Дефолтный ответ
-            res['response']['text'] = (
-                f"Вы сказали: '{req['request']['original_utterance']}'. "
-                "Я могу рассказать про WebHook, логирование, именованные сущности, Flask или JSON. "
-                "Что вас интересует?"
-            )
-            res['response']['buttons'] = self.get_suggests(user_id)
+                
+        except Exception as e:
+            app.logger.error(f'Ошибка в handle_dialog: {str(e)}', exc_info=True)
+            res['response']['text'] = "Произошла ошибка при обработке вашего вопроса. Попробуйте ещё раз."
+            res['response']['end_session'] = False
     
     def get_suggests(self, user_id):
         """Возвращает подсказки (кнопки) для пользователя"""

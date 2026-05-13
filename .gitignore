@@ -1,4 +1,23 @@
 ```
-__pycache__/
+# Compiled Python files
 *.pyc
+__pycache__/
+
+# Logs
+*.log
+server.log
+
+# Dependencies
+.venv/
+venv/
+node_modules/
+
+# Editors
+.vscode/
+.idea/
+
+# Environment files
+.env
+.env.local
+*.env.*
 ```

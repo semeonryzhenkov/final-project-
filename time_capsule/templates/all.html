@@ -42,7 +42,7 @@
                         <strong>Автор:</strong> {{ capsule.author }} | 
                         <strong>Открытие:</strong> {{ capsule.open_at.strftime('%d.%m.%Y %H:%M') }}
                         {% if not capsule.is_opened %}
-                            | <strong>Осталось дней:</strong> {{ (capsule.open_at - now).days if capsule.open_at > now else 0 }}
+                            | <strong>Осталось дней:</strong> {{ ((capsule.open_at - now).days) if (capsule.open_at > now) else 0 }}
                         {% endif %}
                     </p>
                 </div>
@@ -58,7 +58,4 @@
     </div>
     {% endfor %}
 </div>
-
-<!-- Функция для получения текущего времени -->
-{% set now = datetime.utcnow %}
 {% endblock %}
