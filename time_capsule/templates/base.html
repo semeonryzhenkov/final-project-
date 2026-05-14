@@ -177,6 +177,7 @@
             <a href="{{ url_for('index') }}">Главная</a>
             <a href="{{ url_for('create_capsule') }}">Создать капсулу</a>
             <a href="{{ url_for('all_capsules') }}">Все капсулы</a>
+            <a href="{{ url_for('today_capsules') }}">Открылись сегодня</a>
         </nav>
 
         {% with messages = get_flashed_messages(with_categories=true) %}

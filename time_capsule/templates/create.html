@@ -4,7 +4,7 @@
 <h2>Создать новую капсулу времени</h2>
 <p style="margin-bottom: 20px; color: #666;">
     Сохраните свои мысли, воспоминания или цели для будущего. 
-    Вы сможете открыть эту капсулу только после указанной даты!
+    Вы сможете открыть эту капсулу только после наступления выбранного периода!
 </p>
 
 <form method="POST">
@@ -41,19 +41,14 @@
     </div>
     
     <div class="form-group">
-        {{ form.open_date.label }}
-        {{ form.open_date() }}
-        <small style="color: #666;">Формат: ГГГГ-ММ-ДД ЧЧ:ММ (например, 2025-12-31 23:59)</small>
-        {% if form.open_date.errors %}
-            {% for error in form.open_date.errors %}
+        {{ form.open_period.label }}
+        {{ form.open_period() }}
+        <small style="color: #666;">Выберите период через который капсула откроется</small>
+        {% if form.open_period.errors %}
+            {% for error in form.open_period.errors %}
                 <span style="color: red; font-size: 0.9em;">{{ error }}</span>
             {% endfor %}
         {% endif %}
-    </div>
-    
-    <div class="form-group">
-        {{ form.category.label }}
-        {{ form.category() }}
     </div>
     
     <div class="form-group">
