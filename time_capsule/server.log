@@ -5,24 +5,16 @@ WARNING: This is a development server. Do not use it in a production deployment.
  * Running on http://127.0.0.1:5000
  * Running on http://21.0.10.179:5000
 Press CTRL+C to quit
-127.0.0.1 - - [14/May/2026 10:51:06] "GET /create HTTP/1.1" 200 -
-127.0.0.1 - - [14/May/2026 10:51:10] "POST /create HTTP/1.1" 200 -
-127.0.0.1 - - [14/May/2026 10:51:13] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [14/May/2026 10:51:23] "GET / HTTP/1.1" 200 -
-/workspace/time_capsule/app.py:192: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+/workspace/time_capsule/app.py:152: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  current_time = datetime.utcnow()
+127.0.0.1 - - [14/May/2026 10:58:48] "GET /capsule/1 HTTP/1.1" 200 -
+127.0.0.1 - - [14/May/2026 10:58:52] "GET /capsule/1 HTTP/1.1" 200 -
+/workspace/time_capsule/app.py:193: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
   today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-127.0.0.1 - - [14/May/2026 10:51:26] "GET /today HTTP/1.1" 200 -
-/workspace/time_capsule/app.py:185: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+127.0.0.1 - - [14/May/2026 10:58:55] "GET /today HTTP/1.1" 200 -
+/workspace/time_capsule/app.py:186: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
   now = datetime.utcnow()
-127.0.0.1 - - [14/May/2026 10:51:29] "GET /all HTTP/1.1" 200 -
-127.0.0.1 - - [14/May/2026 10:51:31] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [14/May/2026 10:51:35] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [14/May/2026 10:51:37] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [14/May/2026 10:51:40] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [14/May/2026 10:51:44] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [14/May/2026 10:51:47] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [14/May/2026 10:51:50] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [14/May/2026 10:51:53] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [14/May/2026 10:51:57] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [14/May/2026 10:52:01] "GET /capsule/1 HTTP/1.1" 404 -
-127.0.0.1 - - [14/May/2026 10:52:04] "GET /capsule/1 HTTP/1.1" 404 -
+127.0.0.1 - - [14/May/2026 10:59:00] "GET /all HTTP/1.1" 200 -
+127.0.0.1 - - [14/May/2026 10:59:04] "GET /create HTTP/1.1" 200 -
+127.0.0.1 - - [14/May/2026 10:59:17] "GET /today HTTP/1.1" 200 -
+127.0.0.1 - - [14/May/2026 10:59:20] "GET /capsule/3 HTTP/1.1" 200 -

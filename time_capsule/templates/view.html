@@ -15,7 +15,7 @@
         {% elif can_open %}
             <span class="badge badge-pending">Готова к открытию!</span>
         {% else %}
-            <span class="badge badge-pending">Закрыта (осталось дней: {{ (capsule.open_at - now()).days if capsule.open_at > now() else 0 }})</span>
+            <span class="badge badge-pending">Закрыта (осталось дней: {{ (capsule.open_at - current_time).days if capsule.open_at > current_time else 0 }})</span>
         {% endif %}
     </p>
 </div>
@@ -73,7 +73,4 @@
         Все капсулы
     </a>
 </div>
-
-<!-- Функция для получения текущего времени -->
-{% set now = datetime.utcnow %}
 {% endblock %}

@@ -149,8 +149,9 @@ def create_capsule():
 def view_capsule(capsule_id):
     """Просмотр капсулы"""
     capsule = Capsule.query.get_or_404(capsule_id)
-    can_open = datetime.utcnow() >= capsule.open_at
-    return render_template('view.html', capsule=capsule, can_open=can_open, now=datetime.utcnow)
+    current_time = datetime.utcnow()
+    can_open = current_time >= capsule.open_at
+    return render_template('view.html', capsule=capsule, can_open=can_open, current_time=current_time)
 
 
 @app.route('/open/<int:capsule_id>', methods=['GET', 'POST'])
