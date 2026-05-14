@@ -57,6 +57,12 @@
         <small style="color: #666;">Опционально: для будущих уведомлений</small>
     </div>
     
+    <div class="form-group">
+        <label for="files">Прикрепить файлы (опционально)</label>
+        <input type="file" name="files" multiple style="margin-top: 5px;">
+        <small style="color: #666;">Можно выбрать несколько файлов. Максимум 16MB.</small>
+    </div>
+    
     {{ form.submit() }}
 </form>
 

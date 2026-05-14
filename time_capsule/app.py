@@ -103,7 +103,7 @@ def index():
 
 @app.route('/create', methods=['GET', 'POST'])
 def create_capsule():
-    """Создание капсулы (WEB 1 - обработка форм)"""
+    """Создание капсулы с загрузкой файлов"""
     form = CapsuleForm()
     if form.validate_on_submit():
         # Вычисляем дату открытия на основе выбранного периода
@@ -140,6 +140,29 @@ def create_capsule():
         )
         db.session.add(capsule)
         db.session.commit()
+        
+        # Обработка загруженных файлов
+        if 'files' in request.files:
+            files = request.files.getlist('files')
+            for file in files:
+                if file and file.filename:
+                    # Генерируем уникальное имя файла
+                    ext = os.path.splitext(file.filename)[1]
+                    unique_filename = f"{uuid.uuid4().hex}{ext}"
+                    
+                    # Сохраняем файл
+                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+                    file.save(file_path)
+                    
+                    # Сохраняем информацию о файле в БД
+                    capsule_file = CapsuleFile(
+                        capsule_id=capsule.id,
+                        filename=unique_filename,
+                        original_filename=file.filename
+                    )
+                    db.session.add(capsule_file)
+            db.session.commit()
+        
         flash(f'Капсула "{capsule.title}" создана! ID: {capsule.id}', 'success')
         return redirect(url_for('view_capsule', capsule_id=capsule.id))
     return render_template('create.html', form=form)
