@@ -5,17 +5,24 @@ WARNING: This is a development server. Do not use it in a production deployment.
  * Running on http://127.0.0.1:5000
  * Running on http://21.0.10.179:5000
 Press CTRL+C to quit
-127.0.0.1 - - [14/May/2026 10:33:52] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [14/May/2026 10:33:55] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/May/2026 10:51:06] "GET /create HTTP/1.1" 200 -
+127.0.0.1 - - [14/May/2026 10:51:10] "POST /create HTTP/1.1" 200 -
+127.0.0.1 - - [14/May/2026 10:51:13] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/May/2026 10:51:23] "GET / HTTP/1.1" 200 -
 /workspace/time_capsule/app.py:192: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
   today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-127.0.0.1 - - [14/May/2026 10:34:00] "GET /today HTTP/1.1" 200 -
-127.0.0.1 - - [14/May/2026 10:34:03] "GET /create HTTP/1.1" 200 -
-127.0.0.1 - - [14/May/2026 10:34:06] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/May/2026 10:51:26] "GET /today HTTP/1.1" 200 -
 /workspace/time_capsule/app.py:185: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
   now = datetime.utcnow()
-127.0.0.1 - - [14/May/2026 10:34:09] "GET /all HTTP/1.1" 200 -
-127.0.0.1 - - [14/May/2026 10:34:12] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [14/May/2026 10:34:16] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [14/May/2026 10:34:19] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [14/May/2026 10:34:37] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/May/2026 10:51:29] "GET /all HTTP/1.1" 200 -
+127.0.0.1 - - [14/May/2026 10:51:31] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/May/2026 10:51:35] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/May/2026 10:51:37] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/May/2026 10:51:40] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/May/2026 10:51:44] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/May/2026 10:51:47] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/May/2026 10:51:50] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/May/2026 10:51:53] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/May/2026 10:51:57] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/May/2026 10:52:01] "GET /capsule/1 HTTP/1.1" 404 -
+127.0.0.1 - - [14/May/2026 10:52:04] "GET /capsule/1 HTTP/1.1" 404 -
