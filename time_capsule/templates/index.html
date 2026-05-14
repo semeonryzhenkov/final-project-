@@ -17,147 +17,6 @@
     </div>
 </div>
 
-<!-- Окно Яндекс Алисы -->
-<div class="alice-window" style="margin: 30px 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px;">
-    <h3>Яндекс Алиса</h3>
-    <div id="alice-chat" style="padding: 15px; background: rgba(255,255,255,0.9); border-radius: 8px;">
-        <div id="chat-messages" style="height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; background: #f9f9f9;"></div>
-        <div style="display: flex; gap: 10px;">
-            <input type="text" id="alice-input" placeholder="Введите ваш вопрос..." style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-            <button onclick="sendToAlice()" class="btn" style="background: #667eea;">Отправить</button>
-        </div>
-    </div>
-</div>
-
-<script>
-// Глобальное состояние сессии для Алисы
-let aliceSession = {
-    session_id: null,
-    message_id: 0,
-    user_id: 'web-user-' + Math.random().toString(36).substr(2, 9)
-};
-
-function addChatMessage(sender, message, buttons = []) {
-    const chatMessages = document.getElementById('chat-messages');
-    const messageDiv = document.createElement('div');
-    messageDiv.style.marginBottom = '10px';
-    messageDiv.style.padding = '8px';
-    messageDiv.style.borderRadius = '4px';
-    messageDiv.style.background = sender === 'Алиса' ? '#e3f2fd' : '#f5f5f5';
-    
-    let html = `<strong>${sender}:</strong> ${message}`;
-    
-    // Добавляем кнопки если есть
-    if (buttons && buttons.length > 0) {
-        html += '<div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px;">';
-        buttons.forEach(btn => {
-            html += `<button onclick="sendToAlice('${btn.title.replace(/'/g, "\\'")}')" class="btn" style="padding: 5px 10px; font-size: 0.9em; background: #667eea;">${btn.title}</button>`;
-        });
-        html += '</div>';
-    }
-    
-    messageDiv.innerHTML = html;
-    chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-async function sendToAlice(text) {
-    const input = document.getElementById('alice-input');
-    const message = text || input.value.trim();
-    
-    if (!message) return;
-    
-    addChatMessage('Вы', message);
-    if (!text) input.value = '';
-    
-    const chatMessages = document.getElementById('chat-messages');
-    const loadingDiv = document.createElement('div');
-    loadingDiv.id = 'loading-message';
-    loadingDiv.style.color = '#666';
-    loadingDiv.style.fontStyle = 'italic';
-    loadingDiv.textContent = 'Алиса печатает...';
-    chatMessages.appendChild(loadingDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-    
-    // Увеличиваем ID сообщения
-    aliceSession.message_id++;
-    
-    // Формируем запрос в формате Яндекс Диалогов
-    const requestBody = {
-        request: {
-            command: message,
-            original_utterance: message,
-            type: 'SimpleUtterance'
-        },
-        session: {
-            new: aliceSession.session_id === null,
-            message_id: aliceSession.message_id,
-            session_id: aliceSession.session_id || 'session-' + Date.now(),
-            skill_id: 'local-skill-001',
-            user_id: aliceSession.user_id
-        },
-        version: '1.0'
-    };
-    
-    try {
-        const response = await fetch('/api/alice', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(requestBody)
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        // Сохраняем session_id для последующих запросов
-        if (data.session && data.session.session_id) {
-            aliceSession.session_id = data.session.session_id;
-        }
-        
-        // Удаляем сообщение о загрузке
-        const loadingMsg = document.getElementById('loading-message');
-        if (loadingMsg) loadingMsg.remove();
-        
-        // Отображаем ответ
-        const text = data.response?.text || 'Нет ответа';
-        const buttons = data.response?.buttons || [];
-        addChatMessage('Алиса', text, buttons);
-        
-        // Если сессия завершена
-        if (data.response?.end_session) {
-            aliceSession.session_id = null;
-            aliceSession.message_id = 0;
-        }
-    } catch (e) {
-        console.error('Alice API error:', e);
-        const loadingMsg = document.getElementById('loading-message');
-        if (loadingMsg) loadingMsg.remove();
-        addChatMessage('Система', `Ошибка: ${e.message}`);
-    }
-}
-
-// Обработка Enter в поле ввода
-document.addEventListener('DOMContentLoaded', function() {
-    const aliceInput = document.getElementById('alice-input');
-    if (aliceInput) {
-        aliceInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendToAlice();
-            }
-        });
-    }
-    // Приветственное сообщение - инициируем первый запрос
-    setTimeout(() => {
-        sendToAlice('привет');
-    }, 500);
-});
-</script>
-
 <h2>Быстрое создание капсулы</h2>
 <form method="POST" action="{{ url_for('create_capsule') }}">
     {{ form.hidden_tag() }}
@@ -178,13 +37,8 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
     
     <div class="form-group">
-        {{ form.open_date.label }}
-        {{ form.open_date() }}
-    </div>
-    
-    <div class="form-group">
-        {{ form.category.label }}
-        {{ form.category() }}
+        {{ form.open_period.label }}
+        {{ form.open_period() }}
     </div>
     
     <div class="form-group">
@@ -201,7 +55,6 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="capsule-item">
         <h3>{{ capsule.title }}</h3>
         <div class="capsule-meta">
-            <span class="badge badge-{{ capsule.category }}">{{ capsule.category }}</span>
             <span class="badge badge-{{ 'opened' if capsule.is_opened else 'pending' }}">
                 {{ 'Открыта' if capsule.is_opened else 'Закрыта' }}
             </span>

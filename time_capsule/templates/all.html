@@ -5,20 +5,9 @@
 
 <div style="margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 10px;">
     <form method="GET" style="display: flex; gap: 15px; flex-wrap: wrap; align-items: end;">
-        <div style="flex: 1; min-width: 200px;">
-            <label for="category" style="font-weight: bold; color: #333;">Категория:</label>
-            <select name="category" id="category" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px;">
-                <option value="all" {% if current_category == 'all' %}selected{% endif %}>Все категории</option>
-                <option value="personal" {% if current_category == 'personal' %}selected{% endif %}>Личное</option>
-                <option value="memory" {% if current_category == 'memory' %}selected{% endif %}>Воспоминание</option>
-                <option value="goal" {% if current_category == 'goal' %}selected{% endif %}>Цель</option>
-                <option value="message" {% if current_category == 'message' %}selected{% endif %}>Послание будущему</option>
-            </select>
-        </div>
-        
         <div style="flex: 2; min-width: 200px;">
-            <label for="search" style="font-weight: bold; color: #333;">Поиск по названию:</label>
-            <input type="text" name="search" id="search" value="{{ search }}" placeholder="Введите название..." 
+            <label for="search" style="font-weight: bold; color: #333;">Поиск по названию или автору:</label>
+            <input type="text" name="search" id="search" value="{{ search }}" placeholder="Введите название или имя..." 
                    style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px;">
         </div>
         
@@ -34,7 +23,6 @@
             <div style="flex: 1;">
                 <h3>{{ capsule.title }}</h3>
                 <div class="capsule-meta">
-                    <span class="badge badge-{{ capsule.category }}">{{ capsule.category }}</span>
                     <span class="badge badge-{{ 'opened' if capsule.is_opened else 'pending' }}">
                         {{ 'Открыта' if capsule.is_opened else 'Закрыта' }}
                     </span>

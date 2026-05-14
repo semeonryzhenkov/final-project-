@@ -3,7 +3,6 @@
 {% block content %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <h2>Капсула #{{ capsule.id }}: {{ capsule.title }}</h2>
-    <span class="badge badge-{{ capsule.category }}">{{ capsule.category }}</span>
 </div>
 
 <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
@@ -16,7 +15,7 @@
         {% elif can_open %}
             <span class="badge badge-pending">Готова к открытию!</span>
         {% else %}
-            <span class="badge badge-pending">Закрыта (осталось дней: {{ (capsule.open_at - now()).days if capsule.open_at > now() else 0 }})</span>
+            <span class="badge badge-pending">Закрыта (осталось дней: {{ (capsule.open_at - current_time).days if capsule.open_at > current_time else 0 }})</span>
         {% endif %}
     </p>
 </div>
@@ -28,14 +27,36 @@
         <div style="white-space: pre-wrap; line-height: 1.6; font-size: 1.1em;">
             {{ capsule.content }}
         </div>
+        
+        {% if capsule.files %}
+        <h3 style="margin-top: 30px; margin-bottom: 15px;">Прикреплённые файлы:</h3>
+        <ul style="list-style: none; padding: 0;">
+            {% for file in capsule.files %}
+            <li style="background: rgba(255,255,255,0.2); padding: 10px; margin-bottom: 10px; border-radius: 5px;">
+                📎 {{ file.original_filename }}
+                <a href="{{ url_for('download_file', file_id=file.id) }}" style="color: white; margin-left: 10px; text-decoration: underline;">Скачать</a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
     {% else %}
         <div style="text-align: center; padding: 40px;">
-            <p style="font-size: 3em; margin-bottom: 20px;"></p>
+            <p style="font-size: 3em; margin-bottom: 20px;">🔒</p>
             <p style="font-size: 1.2em;">Содержимое скрыто до {{ capsule.open_at.strftime('%d.%m.%Y в %H:%M') }}</p>
             <p style="margin-top: 10px; opacity: 0.8;">Приходите позже, чтобы открыть капсулу!</p>
         </div>
     {% endif %}
 </div>
+
+{% if capsule.is_opened or can_open %}
+<div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+    <h3>Загрузить файлы в капсулу</h3>
+    <form method="POST" action="{{ url_for('upload_files', capsule_id=capsule.id) }}" enctype="multipart/form-data" style="margin-top: 15px;">
+        <input type="file" name="files" multiple style="margin-bottom: 10px;">
+        <button type="submit" class="btn">Загрузить</button>
+    </form>
+</div>
+{% endif %}
 
 <div style="display: flex; gap: 10px;">
     {% if can_open and not capsule.is_opened %}
@@ -52,7 +73,4 @@
         Все капсулы
     </a>
 </div>
-
-<!-- Функция для получения текущего времени -->
-{% set now = datetime.utcnow %}
 {% endblock %}
